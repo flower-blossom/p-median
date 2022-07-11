@@ -1,10 +1,7 @@
-from turtle import distance
-
-
-def findMin(solution, distanceMatrix, p, idx):
+def findMin(solution, distanceMatrix, p, represent):
     min = float('inf')
     for city in range(p):
-        distance = distanceMatrix[solution[city], idx]
+        distance = distanceMatrix[solution[city], represent]
         if min > distance:
             min = distance
     return min
@@ -12,8 +9,8 @@ def findMin(solution, distanceMatrix, p, idx):
 
 def getTotalDistance(solutionList, distanceMatrix, p):
     distance = 0
-    for idx in range(p + 1, len(solutionList)):
-        distance += findMin(solutionList, distanceMatrix, p, idx)
+    for idx in range(p, len(solutionList)):
+        distance += findMin(solutionList, distanceMatrix, p, solutionList[idx])
     return distance
 
 

@@ -7,7 +7,7 @@ import random
 
 
 class Scatter:
-    def __init__(self, popSize=10, refSetSize=5, subSetSize=2, verbose=0, alpha=0.3, beta=0.3, gamma=0.2, timeLimit=300):
+    def __init__(self, popSize=10, refSetSize=5, subSetSize=2, verbose=0, alpha=0.3, beta=0.3, gamma=0.3, timeLimit=300):
         self.refSetSize = refSetSize
         self.subSetSize = subSetSize
         self.popSize = popSize

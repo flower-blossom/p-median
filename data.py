@@ -13,7 +13,10 @@ def readDistanceMatrix(problemName, distanceMatricesFolder):
 
     distanceMatrix = np.loadtxt(distanceMatrixPath, dtype=int)
     return distanceMatrix
+
+
+    
 # example: distanceMatricesFolder = "D:\Học\Thiết kế và đánh giá thuật toán\p-median\distanceMatrices"
-distanceMatricesFolder = "D:\Học\Thiết kế và đánh giá thuật toán\p-median\distanceMatrices"
-problemName = "a280"
-readDistanceMatrix(problemName, distanceMatricesFolder)    
+# distanceMatricesFolder = "D:\Học\Thiết kế và đánh giá thuật toán\p-median\distanceMatrices"
+# problemName = "a280"
+# readDistanceMatrix(problemName, distanceMatricesFolder)    
