@@ -1,13 +1,13 @@
 from copy import copy, deepcopy
 from solution import Solution, getTotalDistance
 from itertools import combinations
-import time 
+import time
 import numpy as np
 import random
 
 
 class Scatter:
-    def __init__(self, popSize=10, refSetSize=5, subSetSize=2,verbose=0, alpha=0.3, beta=0.3, gamma=0.2, timeLimit=300):
+    def __init__(self, popSize=10, refSetSize=5, subSetSize=2, verbose=0, alpha=0.3, beta=0.3, gamma=0.2, timeLimit=300):
         self.refSetSize = refSetSize
         self.subSetSize = subSetSize
         self.popSize = popSize
@@ -26,19 +26,21 @@ class Scatter:
                 distance += distanceMatrix[city, represent]
         return distance
 
-
     def candidateList(self, distanceMatrix, representList, maxTotalDistance):
         candidateList = []
         for city in range(len(distanceMatrix)):
-            distance = self.estimatedTotalDistance(city, distanceMatrix, representList)
+            distance = self.estimatedTotalDistance(
+                city, distanceMatrix, representList)
             if maxTotalDistance*(1 - self.gamma) < distance:
                 candidateList.append(city)
         return candidateList
 
     def findNextCity(self, distanceMatrix, representList):
         citys = [city for city in range(len(distanceMatrix))]
-        maxTotalDistance = max(citys, key=lambda city: self.estimatedTotalDistance(city, distanceMatrix, representList))
-        candidateList = self.candidateList(distanceMatrix, representList, maxTotalDistance)
+        maxTotalDistance = max(citys, key=lambda city: self.estimatedTotalDistance(
+            city, distanceMatrix, representList))
+        candidateList = self.candidateList(
+            distanceMatrix, representList, maxTotalDistance)
         return random.choice(candidateList)
 
     def createSolution(self, distanceMatrix, partCityList, cityList, p):
@@ -54,8 +56,10 @@ class Scatter:
         return Solution(solutionList, distanceMatrix, p)
 
     def scoringForSolution(self, solution, pop):
-        minScoreSolution = min(pop, key=lambda solutionInPop: solutionInPop.totalDistance + solution.totalDistance)
-        score = solution.totalDistance - self.beta * (minScoreSolution.totalDistance + solution.totalDistance)
+        minScoreSolution = min(
+            pop, key=lambda solutionInPop: solutionInPop.totalDistance + solution.totalDistance)
+        score = solution.totalDistance - self.beta * \
+            (minScoreSolution.totalDistance + solution.totalDistance)
         return score
 
     def addGoodSolution(self, pop, distanceMatrix, p, partitionCityLists, cityList):
@@ -69,19 +73,20 @@ class Scatter:
                     if sol.totalDistance == solution.totalDistance:
                         condition = False
                 if condition:
-                    pop.append(solution)  
+                    pop.append(solution)
 
     def addDisperseSolutions(self, pop, distanceMatrix, p, partitionCityLists, cityList):
         while len(pop) < self.popSize:
             createSolution = [self.createSolution(
-                    distanceMatrix, partCityList, cityList, p) for partCityList in partitionCityLists]
-            solution = max(createSolution, key=lambda solution: self.scoringForSolution(solution, pop))  
-            condition = True      
+                distanceMatrix, partCityList, cityList, p) for partCityList in partitionCityLists]
+            solution = max(
+                createSolution, key=lambda solution: self.scoringForSolution(solution, pop))
+            condition = True
             for sol in pop:
                 if sol.totalDistance == solution.totalDistance:
                     condition = False
             if condition:
-                pop.append(solution)  
+                pop.append(solution)
 
     def createPopulation(self, distanceMatrix, p):
         pop = []
@@ -89,8 +94,10 @@ class Scatter:
         random.shuffle(cityList)
         partitionCityLists = np.array_split(cityList, p/4)
         partitionCityLists = [arr.tolist() for arr in partitionCityLists]
-        self.addGoodSolution(pop, distanceMatrix, p, partitionCityLists, cityList)
-        self.addDisperseSolutions(pop, distanceMatrix, p, partitionCityLists, cityList)
+        self.addGoodSolution(pop, distanceMatrix, p,
+                             partitionCityLists, cityList)
+        self.addDisperseSolutions(
+            pop, distanceMatrix, p, partitionCityLists, cityList)
         return pop
 
     def generateReferenceSet(self, pop):
@@ -106,13 +113,39 @@ class Scatter:
 
     def selectSubset(self, refSetSize):
         subSets = combinations(refSetSize, self.subSetSize)
-        return subSets
+        return list(subSets)
 
-    def combineSolutions(self, subSet):
-        solution1 = subSet[0]
-        solution2 = subSet[1]
+    def findFarthestCity(self, distanceMatrix, representList):
+        max = float('-inf')
+        maxTotalDistance = 0
+        nextRepresent = -1
+        for city in range(len(distanceMatrix)):
+            maxTotalDistance = 0
+            if city not in representList:
+                for represent in representList:
+                    distance = distanceMatrix[city, represent]
+                    maxTotalDistance += distance
+            if max < maxTotalDistance:
+                max = maxTotalDistance
+                nextRepresent = city
+        return nextRepresent
 
-
+    def combineSolutions(self, subSet, distanceMatrix, p):
+        solution1 = subSet[0].solutionList[:p]
+        solution2 = subSet[1].solutionList[:p]
+        newSolution = list(set(solution1).intersection(solution2))
+        listCity = [city for city in range(len(distanceMatrix))]
+        if len(newSolution) == 0:
+            return newSolution
+        else:
+            while len(newSolution) < p:
+                nextPresent = self.findFarthestCity(
+                    distanceMatrix, newSolution)
+                newSolution.append(nextPresent)
+                newSolution.append(self.findNextCity(distanceMatrix, [nextPresent]))
+                
+                newSolution = newSolution + list(set(listCity) - set(newSolution))
+        return newSolution
 
     def localSearch(self, solution, distanceMatrix, p):
         currentSolution = solution.__copy__()
@@ -125,7 +158,8 @@ class Scatter:
             for indexPresent in range(p):
                 for indexCity in range(p, cityQuantity):
                     tempList[indexPresent], tempList[indexCity] = tempList[indexCity], tempList[indexPresent]
-                    totalDistance = getTotalDistance(tempList, distanceMatrix, p)
+                    totalDistance = getTotalDistance(
+                        tempList, distanceMatrix, p)
                     if self.verbose == 1:
                         print(f"{totalDistance}: {currentSolution.totalDistance}")
                     if totalDistance < currentSolution.totalDistance:
@@ -136,12 +170,12 @@ class Scatter:
                                 self.bestSoluiton = currentSolution.__copy__()
                         else:
                             self.bestSoluiton = currentSolution.__copy__()
-                    else:                        
-                        tempList[indexPresent], tempList[indexCity] = tempList[indexCity], tempList[indexPresent]    
+                    else:
+                        tempList[indexPresent], tempList[indexCity] = tempList[indexCity], tempList[indexPresent]
                     if time.time() - self.timeStart > self.timeLimit:
                         if currentSolution.totalDistance < self.bestSoluiton.totalDistance:
                             self.bestSoluiton = currentSolution.__copy__()
-                        break    
+                        break
                         # return self.bestSoluiton
 
             if firstTotalDistance == currentSolution.totalDistance:
@@ -154,21 +188,20 @@ class Scatter:
                     self.bestSoluiton = solution.__copy__()
                 return solution
 
-
     def solve(self, distanceMatrix, p):
         self.timeStart = time.time()
         while True:
             pop = self.createPopulation(distanceMatrix, p)
-            # while time.time() - self.timeStart > self.timeLimit:
-            #     refSetSize = self.generateReferenceSet(pop)
-                # subsets = self.selectSubset(refSetSize)
-                # for subset in subsets:
-                #     solution = self.combineSolutions(subset)
-                #     self.localSearch(solution, distanceMatrix, p)
-                    # if time.time() - self.timeStart > self.timeLimit:
-                    #     return self.bestSoluiton
-                # if time.time() - self.timeStart > self.timeLimit:
-                #     return self.bestSoluiton
+            refSetSize = self.generateReferenceSet(pop)
+            subsets = self.selectSubset(refSetSize)
+            for subset in subsets:
+                solutionList = self.combineSolutions(subset, distanceMatrix, p)
+                print(solutionList)
+                if len(solutionList) == 0:
+                    pass
+                else:
+                    solution = Solution(solutionList, distanceMatrix, p)
+                    self.localSearch(solution, distanceMatrix, p)
             if time.time() - self.timeStart > self.timeLimit:
                 return self.bestSoluiton
         return self.bestSoluiton
