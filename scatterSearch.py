@@ -1,5 +1,5 @@
 from copy import copy, deepcopy
-from solution import Solution, getTotalDistance
+from solution import Solution, getRadius
 from itertools import combinations
 import time
 import numpy as np
@@ -142,9 +142,11 @@ class Scatter:
                 nextPresent = self.findFarthestCity(
                     distanceMatrix, newSolution)
                 newSolution.append(nextPresent)
-                newSolution.append(self.findNextCity(distanceMatrix, [nextPresent]))
-                
-                newSolution = newSolution + list(set(listCity) - set(newSolution))
+                newSolution.append(self.findNextCity(
+                    distanceMatrix, [nextPresent]))
+
+                newSolution = newSolution + \
+                    list(set(listCity) - set(newSolution))
         return newSolution
 
     def localSearch(self, solution, distanceMatrix, p):
@@ -152,16 +154,17 @@ class Scatter:
         cityQuantity = len(distanceMatrix)
         while True:
             firstSolutionList = currentSolution.solutionList.copy()
-            firstTotalDistance = getTotalDistance(
+            firstTotalDistance = getRadius(
                 firstSolutionList, distanceMatrix, p)
             tempList = firstSolutionList.copy()
             for indexPresent in range(p):
                 for indexCity in range(p, cityQuantity):
                     tempList[indexPresent], tempList[indexCity] = tempList[indexCity], tempList[indexPresent]
-                    totalDistance = getTotalDistance(
+                    totalDistance = getRadius(
                         tempList, distanceMatrix, p)
                     if self.verbose == 1:
-                        print(f"{totalDistance}: {currentSolution.totalDistance}")
+                        print(
+                            f"Distance: {totalDistance} - Current solution : {currentSolution.totalDistance}")
                     if totalDistance < currentSolution.totalDistance:
                         currentSolution.solutionList = tempList.copy()
                         currentSolution.totalDistance = totalDistance
