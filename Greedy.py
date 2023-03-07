@@ -1,104 +1,97 @@
 import random
 from writeGraph import draw
 
-from utils.solution import Solution
+from utils.solution import *
 
 
+def calculateRadius(point, clusterList, distanceMatrix):
+    return max(clusterList, key=lambda secondPoint: distanceMatrix[
+        point, secondPoint])
+
+def findNextPoint(candidatePoints, weightOfPoints, weightCluster,
+                  clustersList, currentWeight, 
+                  distanceMatrix, weightOfVehicle, storeHouse):
+    minDistance = float('inf')
+    nextPoint = None
+    nextCluster = None
+    for point in candidatePoints:
+        for idxCluster in range(len(clustersList)):
+            cluster = clustersList[idxCluster]
+            cost = 0
+            if currentWeight[idxCluster] + weightOfPoints[point] <= weightCluster[idxCluster]:
+                tempCluster = cluster + [point]
+                radius = findMax(tempCluster, distanceMatrix)
+                mstCluster = MST(tempCluster, distanceMatrix)
+                disToStorehouse = minDisPointToCluster(storeHouse - 1, tempCluster, distanceMatrix)
+                cost = radius * weightOfVehicle[idxCluster] * (mstCluster + disToStorehouse)
+                cost *= (currentWeight[idxCluster] + weightOfPoints[point])
+                if cost < minDistance:
+                    nextPoint = point
+                    minDistance = cost
+                    nextCluster = idxCluster
+
+    return nextPoint, nextCluster
 
 
-def calculateDistance(point, clusterList, distanceMatrix):
-    maxDistance = 0
-    for secondPoint in clusterList:
-        distance = distanceMatrix[point, secondPoint]
-        if maxDistance < distance:
-            maxDistance = distance
-    return maxDistance
+def addFirstPointInClusters(clustersList, candidatePoints, numberOfCluster, distanceMatrix):
+    firstPointList = []
+    firstPoint = random.choice(candidatePoints)
+    candidatePoints.remove(firstPoint)
+    clustersList[0].append(firstPoint)
+    firstPointList.append(firstPoint)
+    for idxcluster in range(1, numberOfCluster):
+        nextPoint = findNextFirstPoint(firstPointList, candidatePoints, distanceMatrix)
+        firstPointList.append(nextPoint)
+        clustersList[idxcluster].append(nextPoint)
+        candidatePoints.remove(nextPoint)
 
 
-class Greedy:
-
-    def __init__(self, dataModel, distanceMatrix, verbose):
-        self.weightCluster = dataModel.weightCluster
-        self.weightOfPoints = dataModel.weightOfPoints
-        # self.size = len(dataModel.distanceMatrix)
-        self.distanceMatrix = distanceMatrix
-        self.verbose = verbose
-        self.comment = 'Greedy'
-
-    def findNextPoint(self, candidatePoints, clustersList, currentWeight):
-        minDistance = float('inf')
-        nextPoint = None
-        nextCluster = None
-        for point in candidatePoints:
-            for idxCluster in range(len(clustersList)):
-                if currentWeight[idxCluster] + self.weightOfPoints[point] <= self.weightCluster[idxCluster]:
-                    radius = calculateDistance(
-                        point, clustersList[idxCluster], self.distanceMatrix)
-                    if radius < minDistance:
-                        nextPoint = point
-                        minDistance = radius
-                        nextCluster = idxCluster
-
-        return nextPoint, nextCluster
-    
-
-    def addFirstPointInClusters(self, clustersList, candidatePoints, numberOfCluster):
-        firstPointList = []
-        firstPoint = random.choice(candidatePoints)
-        candidatePoints.remove(firstPoint)
-        clustersList[0].append(firstPoint)
-        firstPointList.append(firstPoint)
-        for Idxcluster in range(1, numberOfCluster):
-            nextPoint = self.findNextFirstPoint(firstPointList, candidatePoints)
-            firstPointList.append(nextPoint)
-            clustersList[Idxcluster].append(nextPoint)
-            candidatePoints.remove(nextPoint)
+def findNextFirstPoint(firstPointList, candidatePoints, distanceMatrix):
+    nextPoint = max(candidatePoints, key=lambda point: estimatedTotalDistance(
+        point, firstPointList, distanceMatrix))
+    return nextPoint
 
 
-    def findNextFirstPoint(self, firstPointList, candidatePoints):
-        nextPoint = sorted(candidatePoints, key=lambda point: self.estimatedTotalDistance(
-            point, firstPointList), reverse=True)
-        return nextPoint[0]      
+def estimatedTotalDistance(point, firstPointList, distanceMatrix):
+    minDis = float('inf')
+    if point not in firstPointList:
+        for firstPoint in firstPointList:
+            distance = distanceMatrix[point, firstPoint]
+            if minDis > distance:
+                minDis = distance
+    return minDis    
 
-    def estimatedTotalDistance(self, point, firstPointList):
-        min = float('inf')
-        if point not in firstPointList:
-            for firstPoint in firstPointList:
-                distance = self.distanceMatrix[point, firstPoint]
-                if min > distance:
-                    min = distance
-        return min    
 
-    def solve(self):
-        # Print the header if verbose = 1 or verbose = 2
-        if self.verbose == 1 or self.verbose == 2:
-            print(self.comment)
+def greedy(distanceMatrix, dataModel, verbose, x, y, points=None):
+    clustersList = []
+    currentWeight = []
 
-        clustersList = []
-        currentWeight = []
-        numberOfPoint = len(self.distanceMatrix)
-        numberOfCluster = len(self.weightCluster)
+    weightCluster = dataModel.weightCluster
+    weightOfPoints = dataModel.weightOfPoints
+    weightOfVehicle = dataModel.weightOfVehicle
+    numberOfPoint = len(distanceMatrix) - 1
+    storeHouse = len(distanceMatrix)
+    numberOfCluster = len(weightCluster)
 
-        for _ in range(numberOfCluster):
-            clustersList.append([])
-            currentWeight.append(0)
-        candidatePoints = [point for point in range(numberOfPoint)]
 
-        self.addFirstPointInClusters(clustersList, candidatePoints, numberOfCluster)
-        for idxCluster in range(numberOfCluster):
-            for point in clustersList[idxCluster]:
-                currentWeight[idxCluster] += self.weightOfPoints[point]
+    for _ in range(numberOfCluster):
+        clustersList.append([])
+        currentWeight.append(0)
 
-        while candidatePoints:
-            nextPoint, nextCluster = self.findNextPoint(
-                candidatePoints, clustersList, currentWeight)
-            candidatePoints.remove(nextPoint)
-            clustersList[nextCluster].append(nextPoint)
-            currentWeight[nextCluster] += self.weightOfPoints[nextPoint]
+    candidatePoints = [point for point in range(numberOfPoint)]
+    addFirstPointInClusters(clustersList, candidatePoints, numberOfCluster, distanceMatrix)
+    # draw(x, y, clustersList)
+    for idxCluster in range(numberOfCluster):
+        for point in clustersList[idxCluster]:
+            currentWeight[idxCluster] += weightOfPoints[point]
+    while candidatePoints:
+        # print(candidatePoints)
+        nextPoint, nextCluster = findNextPoint(
+            candidatePoints, weightOfPoints, weightCluster ,
+            clustersList, currentWeight, distanceMatrix, 
+            weightOfVehicle, storeHouse)
+        candidatePoints.remove(nextPoint)
+        clustersList[nextCluster].append(nextPoint)
+        currentWeight[nextCluster] += weightOfPoints[nextPoint]
 
-        solution = Solution(clustersList, currentWeight, self.distanceMatrix)
-
-        # Print the final result if verbose = 1 or verbose = 2
-        if self.verbose == 1 or self.verbose == 2:
-            print(f'Total Distance: {solution.totalDistance}\n')
-        return solution
+    return Solution(clustersList, currentWeight, distanceMatrix, dataModel)

@@ -2,7 +2,7 @@ from numpy import zeros
 from random import sample, choice
 import time
 
-from Greedy import Greedy, calculateDistance
+from Greedy import greedy, calculateRadius
 from utils.solution import findMax
 
 
@@ -74,7 +74,7 @@ def distanceVaries(distanceMatrix, firstPoint, firstCluster, radiusFirstCluster,
     else:
         firstCluster.remove(firstPoint)
         newRadiusFirstCluster = findMax(firstCluster, distanceMatrix)
-        estimatePointDistance = calculateDistance(
+        estimatePointDistance = calculateRadius(
             firstPoint, secondCluster, distanceMatrix)
         secondCluster.append(firstPoint)
         if estimatePointDistance > radiusSecondCluster:
@@ -132,7 +132,7 @@ class Tabu:
         """
         Create initial solution by Greedy if first solution is None.
         """
-        solution = Greedy(self.dataModel, self.distanceMatrix, 1).solve()
+        solution = greedy(self.dataModel, self.distanceMatrix, 1).solve()
         self.bestSolution = solution.__copy__()
         return solution
 

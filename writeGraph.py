@@ -56,12 +56,9 @@ def drawInteractive(x, y, solutionList, distanceMatrix):
     df = pd.DataFrame(infoPoint, columns =['x', 'y', "index_cluster"])
     df["index_cluster"] = df["index_cluster"].astype(str)
     
-    # Loading the iris dataset
 
     fig = px.scatter(df, x="x", y="y",
                     color="index_cluster")
-    # print(df)
-
 
     for idxCluster in range(len(solutionList)):
         print(solutionList[idxCluster])
