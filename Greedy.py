@@ -20,8 +20,8 @@ def findNextPoint(candidatePoints, weightOfPoints, weightCluster,
             cost = 0
             if currentWeight[idxCluster] + weightOfPoints[point] <= weightCluster[idxCluster]:
                 tempCluster = cluster + [point]
-                radius = findMax(tempCluster, distanceMatrix)
-                mstCluster = MST(tempCluster, distanceMatrix)
+                radius = getMaxRadius(tempCluster, distanceMatrix)
+                mstCluster = MST(tempCluster, distanceMatrix)[0]
                 disToStorehouse = minDisPointToCluster(storeHouse - 1, tempCluster, distanceMatrix)
                 cost = radius * weightOfVehicle[idxCluster] * (mstCluster + disToStorehouse)
                 cost *= (currentWeight[idxCluster] + weightOfPoints[point])
@@ -62,7 +62,7 @@ def estimatedTotalDistance(point, firstPointList, distanceMatrix):
     return minDis    
 
 
-def greedy(distanceMatrix, dataModel, verbose, x, y, points=None):
+def greedy(distanceMatrix, dataModel, verbose, x, y, clustersList=None):
     clustersList = []
     currentWeight = []
 
@@ -72,20 +72,22 @@ def greedy(distanceMatrix, dataModel, verbose, x, y, points=None):
     numberOfPoint = len(distanceMatrix) - 1
     storeHouse = len(distanceMatrix)
     numberOfCluster = len(weightCluster)
+ 
+    # if clustersList is not None:
+    #     if 
+    # else:
+    #     for _ in range(numberOfCluster):
+    #         clustersList.append([])
+    #         currentWeight.append(0)
 
-
-    for _ in range(numberOfCluster):
-        clustersList.append([])
-        currentWeight.append(0)
-
-    candidatePoints = [point for point in range(numberOfPoint)]
-    addFirstPointInClusters(clustersList, candidatePoints, numberOfCluster, distanceMatrix)
-    # draw(x, y, clustersList)
-    for idxCluster in range(numberOfCluster):
-        for point in clustersList[idxCluster]:
-            currentWeight[idxCluster] += weightOfPoints[point]
+    #     candidatePoints = [point for point in range(numberOfPoint)]
+    #     addFirstPointInClusters(clustersList, candidatePoints, numberOfCluster, distanceMatrix)
+    #     # draw(x, y, clustersList)
+    #     for idxCluster in range(numberOfCluster):
+    #         for point in clustersList[idxCluster]:
+    #             currentWeight[idxCluster] += weightOfPoints[point]
+                
     while candidatePoints:
-        # print(candidatePoints)
         nextPoint, nextCluster = findNextPoint(
             candidatePoints, weightOfPoints, weightCluster ,
             clustersList, currentWeight, distanceMatrix, 

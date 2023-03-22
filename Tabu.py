@@ -3,7 +3,7 @@ from random import sample, choice
 import time
 
 from Greedy import greedy, calculateRadius
-from utils.solution import findMax
+from utils.solution import getMaxRadius
 
 
 def positionOfPoint(solutionList, quantityOfPoint):
@@ -29,8 +29,9 @@ def checkConstraintSatisfiedSolution(solutionList, weightOfPoints, limitWeightCl
             checkWeight.append(True)
     return checkWeight 
 
-def isValidCondition(weightOfPoints, limitWeightCluster, weightClusterSolution, firstPoint, idxFirstCluster,
-                     idxSecondCluster, secondPoint=None):
+def isValidCondition(weightOfPoints, limitWeightCluster, 
+                     weightClusterSolution, firstPoint, 
+                     idxFirstCluster,idxSecondCluster, secondPoint=None):
     weightFirstClusterAfter = 0
     weightSecondClusterAfter = 0
     if secondPoint is not None:
@@ -67,20 +68,20 @@ def distanceVaries(distanceMatrix, firstPoint, firstCluster, radiusFirstCluster,
     if secondPoint is not None:
         idxSecondPoint = secondCluster.index(secondPoint)
         firstCluster[idxFirstPoint], secondCluster[idxSecondPoint] = secondCluster[idxSecondPoint], firstCluster[idxFirstPoint]
-        newRadiusFirstCluster = findMax(firstCluster, distanceMatrix)
-        newRadiusSecondCluster = findMax(
+        newRadiusFirstCluster = getMaxRadius(firstCluster, distanceMatrix)
+        newRadiusSecondCluster = getMaxRadius(
             secondCluster, distanceMatrix)
         firstCluster[idxFirstPoint], secondCluster[idxSecondPoint] = secondCluster[idxSecondPoint], firstCluster[idxFirstPoint]
     else:
         firstCluster.remove(firstPoint)
-        newRadiusFirstCluster = findMax(firstCluster, distanceMatrix)
+        newRadiusFirstCluster = getMaxRadius(firstCluster, distanceMatrix)
         estimatePointDistance = calculateRadius(
             firstPoint, secondCluster, distanceMatrix)
         secondCluster.append(firstPoint)
         if estimatePointDistance > radiusSecondCluster:
             newRadiusSecondCluster = estimatePointDistance
         else:
-            newRadiusSecondCluster = findMax(
+            newRadiusSecondCluster = getMaxRadius(
                 secondCluster, distanceMatrix)
         firstCluster.append(firstPoint)
         secondCluster.remove(firstPoint)
@@ -529,7 +530,5 @@ class LocalSearch:
         while terminationCriteriaStatus:
             terminationCriteriaStatus = False
             terminationCriteriaStatus = self.mainLocalSearch(solution)
-            # if time.time() - timeStart > timeLimit:
-            #     break
 
         return solution
